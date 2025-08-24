@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}My account{% endblock %}
+
+{% block navbutton %}
+<li class="nav-item dropdown">
+  <a class="nav-link dropdown-toggle me-auto" href="#" role="button" data-bs-toggle="dropdown">
+    My account
+  </a>
+  <ul class="dropdown-menu">
+    <li><a class="dropdown-item" href="{% url 'home' %}">Home</a></li>
+  </ul>
+</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-lg-4">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% include 'includes/form.html' %}
+      <button type="submit" class="btn btn-success mt-2">Save changes</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

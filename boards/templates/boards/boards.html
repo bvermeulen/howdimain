@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% load humanize %}
+{% load crispy_forms_tags %}
+
+{% block navbutton %}
+<li class="nav-item dropdown">
+  <a class="nav-link dropdown-toggle me-auto" href="#" role="button" data-bs-toggle="dropdown">
+    Boards
+  </a>
+  <ul class="dropdown-menu">
+    <li><a class="dropdown-item" href="{% url 'home' %}">Home</a></li>
+  </ul>
+</li>
+{% endblock %}
+
+{% block content %}
+{% if user.is_authenticated %}
+<div class="mb-2">
+  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#AddBoardModal">Add board</button>
+  <form style="display: inline-block;" class="" method="post">
+    {% csrf_token %}
+    {% if form.board_selection.value == "user_boards" %}
+    <button type="submit" class="btn btn-primary" name="{{ form.board_selection.name }}" value="all_boards">
+      all boards</button>
+    {% else %}
+    <button type="submit" class="btn btn-primary" name="{{ form.board_selection.name }}" value="user_boards">
+      my boards</button>
+    {% endif %}
+  </form>
+</div>
+{% endif %}
+
+<table class="table table-striped mb-4">
+  <thead class="thead-inverse">
+    <tr>
+      <th>Board</th>
+      <th>Posts</th>
+      <th>Topics</th>
+      <th>Last Post</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for board in boards %}
+    <tr>
+      <td>
+        <a class="btn-link" href="{% url 'board_topics' board.pk %}">{{board.name}}</a>
+        <small class="text-muted d-block">{{board.description}}</small>
+      </td>
+      <td class="align-middle">{{board.get_posts_count}}</td>
+      <td class="align-middle">{{board.topics.count}}</td>
+      <td class="align-middle">
+        {% with post=board.get_last_post %}
+        {% if post %}
+        <small>
+          <a class="btn-link" href="{% url 'topic_posts' board.pk post.topic.pk %}">
+            By {{ post.created_by.username }} - {{ post.created_at|naturaltime }}
+          </a>
+        </small>
+        {% else %}
+        <small>
+          <em>No posts yet ... </em>
+        </small>
+        {% endif %}
+        {% endwith %}
+      </td>
+    </tr>
+    {% endfor %}
+    </body>
+</table>
+<br>
+<br>
+
+<!-- Modal for Boards -->
+<form method="post">
+  {% csrf_token %}
+  <div class="modal fade" id="AddBoardModal" tabindex="0" role="dialog" aria-labelledby="BoardModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="BoardModalLabel">Create a new board</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+          </button>
+        </div>
+        <div class="modal-body">
+          {{ form.name|as_crispy_field }}
+          <button class="btn btn-outline-secondary dropdown-toggle mb-2" data-bs-toggle="dropdown">Contributors</button>
+          <ul class="dropdown-menu ps-1" style="height:40%; overflow:hidden; overflow-y:scroll;">
+            {{ form.contributor|as_crispy_field }}
+          </ul>
+          {{ form.description|as_crispy_field }}
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}
+
+
+{% block javascript %}
+{% endblock %}

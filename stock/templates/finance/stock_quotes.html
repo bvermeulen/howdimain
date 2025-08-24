@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Stock quotes{% endblock %}
+{% block stylesheet %}{% endblock %}
+
+{% block navbutton %}
+<li class="nav-item dropdown">
+  <a class="nav-link dropdown-toggle me-auto" href="#" role="button" data-bs-toggle="dropdown">
+    Stock quotes
+  </a>
+  <ul class="dropdown-menu">
+    <li><a class="dropdown-item" href="{% url 'home' %}">Home</a></li>
+  </ul>
+</li>
+{% endblock %}
+
+{% block content %}
+{% now "Y-m-d" as current_date %}
+
+<form id="id_stockquote" method="post">
+  {% csrf_token %}
+  <a style="display: none">{{ form.quote_string }} {{ form.stockdetails }} {{ form.portfolios }}
+    {{ form.markets }}</a>
+
+  <div class="d-inline-flex flex-wrap">
+    {% if form.date_is_today.value %}
+    <button class="btn btn-outline-primary btn-sm mt-1"
+      onclick="return SubmitQuoteString('{{ form.quote_string.value }}')">Quote
+    </button>
+    {% endif %}
+    <div class="dropdown">
+      <button type="button" class="dropdown-toggle btn btn-outline-primary btn-sm ms-1 mt-1">
+        {% if form.portfolios.value == '' %}
+        Portfolio
+        {% else %}
+        {{ form.portfolios.value }}
+        {% endif %}
+      </button>
+      <div class="dropdown-content">
+        {% for portfolio in form.portfolios %}
+        {% if not portfolio.data.selected %}
+        <button class="btn btn-link text-nowrap" value="{{ portfolio.data.value}}" name="{{ portfolio.data.name }}">
+          <a>{{ portfolio.choice_label }}</a>
+        </button>
+        {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    {{ form.datepicked }}
+    <button class="btn dropdown-toggle btn-outline-primary btn-sm ms-1 mt-1" data-bs-toggle="dropdown">Markets</button>
+    <ul class="dropdown-menu scroll ps-1" style="height:40%">
+      {{ form.markets|as_crispy_field }}
+    </ul>
+    <div class="dropdown">
+      <button type="button" class="btn dropdown-toggle btn-outline-primary btn-sm ms-1 mt-1">
+        {{ form.stockdetails.value }}
+      </button>
+      <div class="dropdown-content">
+        {% for stockdetail in form.stockdetails %}
+        {% if not stockdetail.data.selected %}
+        <button class="btn btn-link text-nowrap" value="{{ stockdetail.data.value }}"
+          name="{{ stockdetail.data.name }}">{{stockdetail.choice_label }}</button>
+        {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    {% if user.is_authenticated %}
+    <button type="button" class="btn btn-outline-primary btn-sm ms-1 mt-1"
+      onclick="window.location.href='{% url 'portfolio' %}'">My portfolio</button>
+    {% endif %}
+  </div>
+
+  <div class="text-nowrap mb-2 mt-2" style="overflow: hidden; clear:both">
+    <table id="dtHorizontalVerticalScroll" class="table table-responsive table-striped table-sm" cellspacing="0"
+      width="100%">
+      <thead class="custom-thead-grey">
+        <tr>
+          <th width="17%">Company</th>
+          <th width="10%">Symbol</th>
+          <th width="10%">Market</th>
+          <th width="7%">Currency</th>
+          <th width="2%"></th>
+          <th width="7%">Price</th>
+          <th width="7%">+/-</th>
+          <th width="7%">Pct</th>
+          <th width="7%">Low</th>
+          <th width="7%">High</th>
+          <th width="7%">Previous</th>
+          <th width="12%">Last trade</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for stock in stock_info %}
+        <tr>
+          {% if form.stockdetails.value == form.stockdetails.field.choices.0.0 %}
+          <td width="17%"><a class="btn-link" href="{% url 'stock_intraday' source stock.symbol %}">
+              {{ stock.name|truncatechars:20 }}</a>
+          </td>
+          {% elif form.stockdetails.value == form.stockdetails.field.choices.1.0 %}
+          <td width="17%"><a class="btn-link" href="{% url 'stock_news' source stock.symbol %}">
+              {{ stock.name|truncatechars:20 }}</a>
+          </td>
+          {% elif form.stockdetails.value == form.stockdetails.field.choices.2.0 %}
+          <td width="17%"><a class="btn-link" href="{% url 'stock_press' source stock.symbol %}">
+              {{ stock.name|truncatechars:20 }}</a>
+          </td>
+          {% endif %}
+          <td width="10%">{{ stock.symbol }}</td>
+          <td width="10%">{{ stock.exchange_mic|truncatechars:9 }}</td>
+          <td width="7%">{{ stock.currency }}</td>
+          <td style="width: 2%; color:{{ stock.font_color }}">{{ stock.caret_up_down }}</td>
+          <td style="width: 7%; color:{{ stock.font_color }}">{{ stock.price }}</td>
+          <td style="width: 7%; color:{{ stock.font_color }}">{{ stock.day_change }}</td>
+          <td style="width: 7%; color:{{ stock.font_color }}"">{{ stock.change_pct }}%</td>
+        <td width=" 7%"> {{ stock.day_low }}</td>
+          <td width="7%">{{ stock.day_high }}</td>
+          <td width="7%">{{ stock.close_yesterday }}</td>
+          {% if current_date > stock.last_trade_time|date:"Y-m-d" %}
+          <td width="12%">{{ stock.last_trade_time|date:"j M y, H:i" }}</td>
+          {% else %}
+          <td width="12%">{{ stock.last_trade_time|date:"h:i a" }}</td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+    </table>
+  </div>
+  <small>Data provided by <a href="https://{{ data_provider_url }}" target="_blank">{{ data_provider_url }}</a></small>
+
+</form>
+<br><br><br><br>
+{% endblock content %}
+
+{% block javascript %}
+<script>
+  var form = document.getElementById('id_stockquote');
+
+  function SubmitQuoteString(QuoteString) {
+    var EnteredStockString = prompt('Give symbols or company names', QuoteString);
+    if (EnteredStockString != null && EnteredStockString != "''" && EnteredStockString != '') {
+      form.quote_string.value = EnteredStockString;
+      return true;
+    }
+    else {
+      return false;
+    }
+  }
+
+  $('#id_datepicked').change(function () {
+    form.submit();
+  })
+
+</script>
+{% endblock %}
