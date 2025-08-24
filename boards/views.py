@@ -33,7 +33,8 @@ class BoardListView(ListView):
         default_user = get_object_or_404(User, username="default_user")
         user = self.request.user
         logger.info(
-            f"{user} [{get_client_ip(self.request)}] clicked on menu boards"
+            f"{user} [{get_client_ip(self.request)}] "
+            f"clicked on menu Boards"
         )
 
         if user.is_authenticated:
@@ -143,8 +144,7 @@ class TopicListView(ListView):
                 and user == board.owner
             ):
                 logger.info(
-                    f"{user} [{get_client_ip(request)}] deleted "
-                    f"board: {board.name}"
+                    f"{user} [{get_client_ip(request)}] deleted " f"board: {board.name}"
                 )
                 board.delete()
                 return redirect("boards")
