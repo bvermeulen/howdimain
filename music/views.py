@@ -46,7 +46,7 @@ class PlayTopTracksView(View):
         sort_choice = request.session.get("music_sort_choice", 1)
         logger.info(
             f"{self.request.user} [{get_client_ip(self.request)}] "
-            f"selected menu music"
+            f"clicked on menu Music"
         )
 
         if not artist_dict.get("top_tracks"):

@@ -29,7 +29,7 @@ class QuoteView(View):
 
         logger.info(
             f"{self.request.user} [{get_client_ip(self.request)}] "
-            f"selected menu quote"
+            f"clicked on menu Quote"
         )
         selected_portfolio = request.session.get("selected_portfolio", "")
         stockdetail = request.session.get("stockdetail", STOCK_DETAILS[0][0])
